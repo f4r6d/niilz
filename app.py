@@ -77,7 +77,12 @@ def upload_files():
 @login_required
 def messages():
     if request.method == "POST":
-        pass
+        message = urllib.parse.quote(request.form.get('message'))
+        r = requests.get(f'https://api.kavenegar.com/v1/{os.environ.get("API_KEY")}/sms/send.json?receptor=09386048243&sender=10004346&message={message}')
+        if r.status_code == requests.codes.ok:
+            return render_template("send.html")
+
+
     else:
         return render_template("messages.html")
 
