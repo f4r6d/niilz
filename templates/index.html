@@ -1,55 +1,24 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Portfolio
+    PlayList
 {% endblock %}
 
 {% block main %}
 
 
-    <div class="section container">
-        <h2>{{ message }}</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Symbol</th>
-                    <th>Name</th>
-                    <th>Shares</th>
-                    <th>Price</th>
-                    <th>TOTAL</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- TODO: Loop through the database entries to display them in this table-->
-                {% for stock in stocks %}
-                    <tr>
-                        <td>{{ stock.symbol }}</td>
-                        <td>{{ stock.name }}</td>
-                        <td>{{ stock.shares }}</td>
-                        <td>{{ stock.price }}</td>
-                        <td>{{ stock.total }}</td>
-                    </tr>
-                {% endfor %}
-
-                <tr>
-                    <td>CASH</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>{{ cash }}</td>
-                </tr>
-
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td>{{ total }}</td>
-                </tr>
-
-            </tbody>
-        </table>
-    </div>
+    <h1>File Upload</h1>
+    <form method="POST" action="" enctype="multipart/form-data">
+      <p><input type="file" name="file"></p>
+      <p><input type="submit" value="Submit"></p>
+    </form>
+    <hr>
+    {% for file in files %}
+      <audio controls>
+        <source src="static/music/{{ file }}">
+         Your browser does not support the audio element.
+      </audio>
+    {% endfor %}
 
 
 {% endblock %}

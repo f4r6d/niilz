@@ -1,7 +1,7 @@
 import os
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, url_for, abort, send_from_directory
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
@@ -9,11 +9,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required
 
+from werkzeug.utils import secure_filename
+
 # Configure application
 app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
+app.config['UPLOAD_EXTENSIONS'] = ['.mp3', '.wav', '.aac', '.flac', '.m4a']
+app.config['UPLOAD_PATH'] = 'static/music/'
 
 
 # Ensure responses aren't cached
@@ -46,25 +51,27 @@ if not os.environ.get("API_KEY"):
     raise RuntimeError("API_KEY not set")
 
 
+
 @app.route("/")
 @login_required
 def index():
-    """Show portfolio of stocks"""
-    return apology("under constructions")
+    files = os.listdir(app.config['UPLOAD_PATH'])
+    return render_template('index.html', files=files)
+
+@app.route('/', methods=['POST'])
+def upload_files():
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+            abort(400)
+        uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+    return redirect(url_for('index'))
 
 
-@app.route("/buy", methods=["GET", "POST"])
-@login_required
-def buy():
-    """Buy shares of stock"""
-    return apology("under constructions")
 
 
-@app.route("/history")
-@login_required
-def history():
-    """Show history of transactions"""
-    return apology("under constructions")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -150,12 +157,6 @@ def change():
     return render_template("change.html")
 
 
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-    """Get stock quote."""
-    return apology("under constructions")
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -194,11 +195,6 @@ def register():
         return render_template('register.html')
 
 
-@app.route("/sell", methods=["GET", "POST"])
-@login_required
-def sell():
-    """Sell shares of stock"""
-    return apology("under constructions")
 
 
 def errorhandler(e):
