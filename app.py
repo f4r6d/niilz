@@ -1,4 +1,6 @@
 import os
+import urllib.parse
+import requests
 
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for, abort, send_from_directory
@@ -71,7 +73,13 @@ def upload_files():
 
 
 
-
+@app.route("/messages", methods=['GET', 'POST'])
+@login_required
+def messages():
+    if request.method == "POST":
+        pass
+    else:
+        return render_template("messages.html")
 
 
 @app.route("/login", methods=["GET", "POST"])

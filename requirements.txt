@@ -4,3 +4,6 @@ Flask-Session
 requests
 gunicorn
 psycopg2
+requests
+urllib.parse
+urllib
