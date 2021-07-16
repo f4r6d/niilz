@@ -39,7 +39,7 @@ uri = uri.replace("postgres://", "postgresql://", 1)
 db = SQL(uri)
 
 
-# db.execute("CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, hash TEXT NOT NULL, cash NUMERIC NOT NULL DEFAULT 10000.00)")
+db.execute("CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, hash TEXT NOT NULL)")
 
 # db.execute("CREATE TABLE trans (user_id SERIAL , symbol TEXT NOT NULL, shares NUMERIC NOT NULL, price NUMERIC NOT NULL DEFAULT 0, ts  TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))")
 
@@ -52,89 +52,21 @@ if not os.environ.get("API_KEY"):
 @login_required
 def index():
     """Show portfolio of stocks"""
-    rows = db.execute("SELECT symbol, sum(shares) FROM trans WHERE user_id=? GROUP BY symbol", session["user_id"])
-
-    stocks = []
-    total = 0
-    for row in rows:
-        if row['sum'] != 0:
-            stock = {}
-            stock['symbol'] = row['symbol'].upper()
-            stock['name'] = lookup(row['symbol'])['name']
-            stock['shares'] = row['sum']
-            stock['price'] = lookup(row['symbol'])['price']
-            stock['total'] = usd(stock['price'] * stock['shares'])
-            total += stock['price'] * stock['shares']
-
-            stocks.append(stock)
-    for stock in stocks:
-        stock['price'] = usd(stock['price'])
-
-    user = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])
-    cash = user[0]['cash']
-    total += cash
-
-
-
-    return render_template('index.html', stocks=stocks, cash=usd(cash), total=usd(total))
+    return apology("under constructions")
 
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
 def buy():
     """Buy shares of stock"""
-    if request.method == 'POST':
-        if not request.form.get('shares'):
-            return apology("enter how many shares")
-
-        symbol = request.form.get('symbol').upper()
-        if lookup(symbol):
-            user = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])
-            total = user[0]['cash']
-
-
-
-
-            if not request.form.get('shares'):
-                return apology("enter share count")
-
-            if not request.form.get('shares').isdigit():
-                return apology("enter valid share count")
-
-            if float(request.form.get('shares')) < 0 or float(request.form.get('shares')) % 1 != 0:
-                return apology("enter valid share count")
-
-            price = lookup(symbol)['price'] * int(request.form.get('shares'))
-
-            if price > total:
-                return apology("not enough money")
-
-
-            else:
-
-                total -= price
-                db.execute("UPDATE users SET cash = ? WHERE id = ?", total, session["user_id"])
-
-                db.execute("INSERT INTO trans (user_id, symbol, shares, price) VALUES(?, ?, ?, ?)", session["user_id"], symbol, int(request.form.get('shares')), price)
-
-                return redirect('/')
-
-        return apology("wrong symbol")
-
-
-    return render_template('buy.html')
+    return apology("under constructions")
 
 
 @app.route("/history")
 @login_required
 def history():
     """Show history of transactions"""
-    records = db.execute("SELECT * FROM trans WHERE user_id=?", session["user_id"])
-
-    for r in records:
-        r['price'] = usd(r['price'])
-
-    return render_template('history.html', records=records)
+    return apology("under constructions")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -224,17 +156,7 @@ def change():
 @login_required
 def quote():
     """Get stock quote."""
-    if request.method == 'POST':
-        symbol = request.form.get('symbol')
-        if lookup(symbol):
-            sym = lookup(symbol)["name"]
-            price = usd(float(lookup(symbol)["price"]))
-            return render_template('quote_price.html', sym=sym, price=price)
-
-        return apology("wrong symbol")
-
-
-    return render_template('quote.html')
+    return apology("under constructions")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -270,8 +192,6 @@ def register():
             return redirect("/")
 
 
-
-
     else:
         return render_template('register.html')
 
@@ -280,44 +200,7 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
-    rows = db.execute("SELECT symbol, sum(shares) FROM trans WHERE user_id=? GROUP BY symbol", session["user_id"])
-
-    stocks = {}
-    for row in rows:
-        if row['sum'] != 0:
-            stocks[row['symbol']] = row['sum']
-
-    if request.method == "POST":
-        sym = request.form.get('symbol').upper()
-        if not sym:
-            return apology("select one stock to sell")
-
-        if sym not in stocks:
-            return apology("you dont have that share, dont cheet")
-
-        sh = request.form.get('shares')
-        if not sh:
-            return apology("enter how many to sell")
-
-        if int(sh) > stocks[sym]:
-            return apology("you dont have that much shares to sell")
-
-        price = int(sh) * lookup(sym)['price']
-
-        total =  (db.execute("SELECT * FROM users WHERE id=?", session["user_id"]))[0]['cash']
-
-        total += price
-
-        db.execute("UPDATE users SET cash = ? WHERE id = ?", total, session["user_id"])
-
-        db.execute("INSERT INTO trans (user_id, symbol, shares, price) VALUES(?, ?, ?, ?)", session["user_id"], sym, int(sh) * -1, price)
-
-        return redirect('/')
-
-
-
-
-    return render_template('sell.html', stocks=stocks)
+    return apology("under constructions")
 
 
 def errorhandler(e):
@@ -331,6 +214,6 @@ def errorhandler(e):
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
 
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
