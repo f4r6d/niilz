@@ -6,4 +6,3 @@ gunicorn
 psycopg2
 requests
 
-urllib
