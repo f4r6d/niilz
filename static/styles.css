@@ -90,3 +90,69 @@ tbody tr:nth-of-type(odd) {
 }
 
 
+#pageloader
+{
+  background: rgba( 255, 255, 255, 0.8 );
+  display: none;
+  height: 100%;
+  position: fixed;
+  width: 100%;
+  left: 0%;
+  z-index: 9999;
+}
+
+#pageloader img
+{
+  left: 50%;
+  margin: auto;
+
+  position: absolute;
+  top: 50%;
+}
+
+
+
+
+
+@media screen and (max-width:768px) {
+main.p-5 {
+    padding:1rem !important;
+}
+table {
+    direction:ltr;
+    text-align:left
+}
+table tbody , table tr{
+    width:100% !important;
+    display:block !important;
+}
+
+table tr th{
+    overflow-x:scroll;
+    display:none;
+}
+table td {
+    display:block
+}
+
+
+table audio {
+    width:100%;
+}
+table td:nth-child(1):before {
+    content:"Title: ";
+    font-weight:700;
+}
+table td:nth-child(3):before {
+    content:"Message: ";
+    font-weight:700;
+}
+table td:nth-child(4):before {
+    content:"From: ";
+    font-weight:700;
+}
+table td:nth-child(5) {
+    text-align:center;
+}
+
+}

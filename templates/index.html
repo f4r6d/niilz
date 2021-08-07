@@ -6,19 +6,51 @@
 
 {% block main %}
 
+    <div id="pageloader">
+      <img src="http://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" alt="processing..." />
+    </div>
 
-    <h1>File Upload</h1>
-    <form method="POST" action="" enctype="multipart/form-data">
-      <p><input type="file" name="file"></p>
-      <p><input type="submit" value="Submit"></p>
+
+
+
+    <h4>Upload music with your own message for NILZ BirthDay!</h5></br>
+    <form id="myform" method="POST" action="" enctype="multipart/form-data">
+        <input type="file" name="file" accept="audio/mp3,audio/wav,audio/aac,audio/flac,audio/m4a"></br></br>
+        <textarea name="message" class="form-control" style="min-width: 75%" placeholder="Type your message here!"></textarea></br>
+        <input type="submit" value="Submit">
     </form>
     <hr>
+    <table class="table table-hover table-responsive-sm">
+      <tr>
+        <th>Track Name</th>
+        <th>Music</th>
+        <th>Message</th>
+        <th>Sender</th>
+        {% if admin[0].admin %}
+          <th>Delete</th>
+        {% endif %}
+      </tr>
     {% for file in files %}
-      <audio controls>
-        <source src="static/music/{{ file }}">
-         Your browser does not support the audio element.
-      </audio>
+      <tr>
+        <td>{{ file.track }}</td>
+        <td>
+          <audio preload='none' controls>
+            <source src="https://songs.s3.ir-thr-at1.arvanstorage.com/{{ file.track }}">
+             Your browser does not support the audio element.
+          </audio>
+        </td>
+        <td>{{ file.message }}</td>
+        {% if file.user_id %}
+          <td>{{ users[file.user_id - 1].username }}</td>
+        {% else %}
+          <td></td>
+        {% endif %}
+        {% if admin[0].admin %}
+          <td><a href="/delete/{{ file.id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete it?')">Delete</a></td>
+        {% endif %}
+      </tr>
     {% endfor %}
+    </table>
 
 
 {% endblock %}

@@ -1,7 +1,6 @@
 import os
 import urllib.parse
 import requests
-
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for, abort, send_from_directory
 from flask_session import Session
@@ -13,14 +12,29 @@ from helpers import apology, login_required
 
 from werkzeug.utils import secure_filename
 
+
+
+# arvan cloud
+import boto3
+import logging
+from botocore.exceptions import ClientError
+
+# Configure logging arvan cloud
+logging.basicConfig(level=logging.INFO)
+
+
+
 # Configure application
 app = Flask(__name__)
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 app.config['UPLOAD_EXTENSIONS'] = ['.mp3', '.wav', '.aac', '.flac', '.m4a']
-app.config['UPLOAD_PATH'] = 'static/music/'
+
+#  app.config['UPLOAD_PATH'] = 'static/music/'
+
+app.config['UPLOAD_PATH'] = 'https://songs.s3.ir-thr-at1.arvanstorage.com/'
 
 
 # Ensure responses aren't cached
@@ -52,43 +66,99 @@ db = SQL(uri)
 
 
 
-# Make sure API key is set
-if not os.environ.get("API_KEY"):
-    raise RuntimeError("API_KEY not set")
-
-
 
 @app.route("/")
 @login_required
 def index():
-    files = os.listdir(app.config['UPLOAD_PATH'])
-    return render_template('index.html', files=files)
+    files = db.execute("SELECT * FROM songs order by id desc")
+    users = db.execute("SELECT * FROM users")
+    admin = db.execute("SELECT admin FROM users WHERE id= ?", session["user_id"])
+    return render_template('index.html', files=files, users=users, admin=admin)
 
 @app.route('/', methods=['POST'])
 def upload_files():
     uploaded_file = request.files['file']
     filename = secure_filename(uploaded_file.filename)
+    message = request.form.get('message')
     if filename != '':
         file_ext = os.path.splitext(filename)[1]
         if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+            flash("abort")
             abort(400)
-        uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+
+        #  uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+
+        try:
+            s3_resource = boto3.resource(
+                's3',
+                endpoint_url=os.environ.get("endpoint_url"),
+                aws_access_key_id=os.environ.get("access_key"),
+                aws_secret_access_key=os.environ.get("secret_key")
+            )
+
+        except Exception as exc:
+            logging.error(exc)
+        else:
+            try:
+                bucket = s3_resource.Bucket('songs')
+
+                bucket.put_object(
+                    ACL='public-read-write',
+                    Body=uploaded_file,
+                    Key=filename
+                )
+
+            except ClientError as e:
+                logging.error(e)
+
+        db.execute("INSERT INTO songs (user_id, track, message) VALUES(?, ?, ?)", session["user_id"], filename, message )
+    flash(filename + ' Uploaded')
     return redirect(url_for('index'))
 
 
+@app.route("/delete/<int:id>")
+def delete(id):
 
-@app.route("/messages", methods=['GET', 'POST'])
-@login_required
-def messages():
-    if request.method == "POST":
-        message = urllib.parse.quote(request.form.get('message'))
-        r = requests.get(f'https://api.kavenegar.com/v1/{os.environ.get("API_KEY")}/sms/send.json?receptor=09386048243&sender=10004346&message={message}')
-        if r.status_code == requests.codes.ok:
-            return render_template("send.html")
+    song = db.execute("select track from songs where id=?", id)
+    db.execute("delete from songs where id=?", id)
 
-
+    try:
+        s3_resource = boto3.resource(
+            's3',
+            endpoint_url=os.environ.get("endpoint_url"),
+            aws_access_key_id=os.environ.get("access_key"),
+            aws_secret_access_key=os.environ.get("secret_key")
+        )
+    except Exception as exc:
+        logging.error(exc)
     else:
-        return render_template("messages.html")
+        try:
+            object_name = song[0]['track']
+
+            bucket = s3_resource.Bucket('songs')
+            object = bucket.Object(object_name)
+            response = object.delete(
+                VersionId='string',
+            )
+        except ClientError as e:
+            logging.error(e)
+
+
+    flash(object_name + ' Deleted')
+    return redirect("/")
+
+
+
+# @app.route("/messages", methods=['GET', 'POST'])
+# @login_required
+# def messages():
+#     if request.method == "POST":
+#         message = urllib.parse.quote(request.form.get('message'))
+#         r = requests.get(f'https://api.kavenegar.com/v1/{os.environ.get("API_KEY")}/sms/send.json?receptor=09386048243&sender=10004346&message={message}')
+#         if r.status_code == requests.codes.ok:
+#             return render_template("send.html")
+#     else:
+#         return render_template("messages.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -120,6 +190,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
+        flash("Logged in!")
         return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -205,6 +276,7 @@ def register():
             session["user_id"] = rows[0]["id"]
 
             # Redirect user to home page
+            flash("Successfully registered!")
             return redirect("/")
 
 
