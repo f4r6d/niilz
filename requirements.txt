@@ -6,6 +6,6 @@ gunicorn
 psycopg2
 requests
 boto3
-logging
+
 
 
