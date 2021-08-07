@@ -44,9 +44,7 @@ uri = uri.replace("postgres://", "postgresql://", 1)
 db = SQL(uri)
 
 
-# db.execute("CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, hash TEXT NOT NULL)")
-db.execute("ALTER TABLE users ADD COLUMN admin_user numeric")
-# db.execute("CREATE TABLE trans (user_id SERIAL , symbol TEXT NOT NULL, shares NUMERIC NOT NULL, price NUMERIC NOT NULL DEFAULT 0, ts  TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(user_id) REFERENCES users(id))")
+# db.execute("CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, hash TEXT NOT NULL, admin_user numeric)")
 
 # Make sure API key is set
 if not os.environ.get("API_KEY"):
