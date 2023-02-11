@@ -53,9 +53,12 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-uri = os.environ.get("DATABASE_URL")
-uri = uri.replace("postgres://", "postgresql://", 1)
-db = SQL(uri)
+# uri = os.environ.get("DATABASE_URL")
+# uri = uri.replace("postgres://", "postgresql://", 1)
+# db = SQL(uri)
+
+
+db = SQL("sqlite:///niilz.db")
 
 
 # db.execute("CREATE TABLE users (id SERIAL PRIMARY KEY, username TEXT NOT NULL, hash TEXT NOT NULL, admin numeric)")
@@ -298,5 +301,5 @@ for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
